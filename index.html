@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Listening and responding supportively</title>
+<style>
+:root{
+  --blue:#004d8c;
+  --grey:#4d4f53;
+  --white:#ffffff;
+  --tint:#eaf1f8;
+  --line:#c9d5e2;
+  --ok:#1b6e35;
+  --ok-bg:#e6f3ea;
+  --bad:#a52a1f;
+  --bad-bg:#fbeceb;
+  --head:"Arial Narrow","Roboto Condensed","Helvetica Neue Condensed","Franklin Gothic Medium",Arial,sans-serif;
+  --body:Arial,"Helvetica Neue",Helvetica,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--white);color:var(--grey);font:16px/1.55 var(--body)}
+.shell{max-width:1000px;margin:0 auto;padding:28px 24px 48px}
+#app:focus{outline:none}
+h1,h2,h3{margin:0}
+h1,.h-display{font-family:var(--head);font-weight:800;text-transform:uppercase;letter-spacing:.01em;color:var(--blue);line-height:1.1}
+h1{font-size:clamp(1.6rem,4.2vw,2.3rem)}
+h2{font-family:var(--head);font-weight:800;color:var(--blue);font-size:clamp(1.3rem,3vw,1.65rem);line-height:1.2}
+h1:focus,h2:focus{outline:none}
+p{margin:0 0 .8em}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.on-blue :focus-visible,.btn:focus-visible{outline-color:var(--blue)}
+.sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- Hub ---------- */
+.hub-head{display:flex;gap:18px;align-items:flex-start;margin-bottom:22px}
+.hub-icon{flex:0 0 68px;height:68px;border-radius:50%;background:var(--blue);display:grid;place-items:center}
+.hub-sub{font-weight:700;color:var(--grey);margin:.5em 0 .15em}
+.hub-hint{margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.card{position:relative;display:flex;text-align:left;padding:0;background:var(--white);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-height:150px;transition:box-shadow .15s,border-color .15s}
+.card:hover{border-color:var(--blue);box-shadow:0 4px 14px rgba(0,77,140,.18)}
+.card-photo{flex:0 0 38%;max-width:132px;background:var(--tint);display:grid;place-items:center}
+.card-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 20%;display:block}
+.av{display:grid;place-items:center;border-radius:50%;color:var(--white);font-family:var(--head);font-weight:800;letter-spacing:.02em}
+.av-0{background:var(--blue)}
+.av-1{background:var(--grey)}
+.card .av{width:76px;height:76px;font-size:1.7rem}
+.card-body{flex:1;padding:12px 44px 12px 14px;display:flex;flex-direction:column;gap:3px}
+.card-name{font-family:var(--head);font-weight:800;font-size:1.25rem;color:var(--blue);text-transform:uppercase;line-height:1.1}
+.card-role{font-weight:700;font-size:.85rem;color:var(--grey)}
+.card-where{display:flex;align-items:center;gap:5px;font-size:.85rem;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:4px}
+.card-quote{font-size:.88rem;line-height:1.4;color:var(--grey)}
+.card-quote b{color:var(--blue);font-size:1.3em;line-height:0;vertical-align:-.15em;margin-right:3px}
+.card-go{position:absolute;right:10px;bottom:10px;width:26px;height:26px;border-radius:50%;border:2px solid var(--blue);display:grid;place-items:center}
+.card.done{border-color:var(--blue)}
+.badge-done{position:absolute;top:8px;right:8px;background:var(--blue);color:var(--white);font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:99px;display:flex;gap:4px;align-items:center}
+.info{display:flex;gap:12px;align-items:center;background:var(--tint);border-radius:8px;padding:12px 16px;margin-top:18px;font-size:.92rem}
+.info-i{flex:0 0 30px;height:30px;border-radius:50%;background:var(--blue);color:var(--white);display:grid;place-items:center;font-weight:700;font-family:Georgia,serif}
+.hub-foot{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;justify-content:space-between;margin-top:22px}
+.tally{font-weight:700;color:var(--blue)}
+.tally small{display:block;font-weight:400;color:var(--grey)}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--blue);color:var(--white);border:2px solid var(--blue);border-radius:99px;padding:10px 26px;font-weight:700;letter-spacing:.02em}
+.btn:hover{background:var(--grey);border-color:var(--grey)}
+.btn[disabled]{background:#c8ccd2;border-color:#c8ccd2;color:#5c5f64;cursor:not-allowed}
+.btn.alt{background:var(--white);color:var(--blue)}
+.btn.alt:hover{background:var(--tint)}
+.link{background:none;border:0;padding:4px 0;color:var(--blue);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- Scene screens ---------- */
+.topbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;margin-bottom:18px}
+.who{display:flex;gap:12px;align-items:center}
+.who .av,.who img{width:46px;height:46px;font-size:1.05rem;border-radius:50%;object-fit:cover;object-position:50% 25%}
+.who-name{font-family:var(--head);font-weight:800;font-size:1.15rem;color:var(--blue);text-transform:uppercase;line-height:1.1}
+.who-meta{font-size:.85rem}
+.steps{display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:700;color:var(--blue);margin-bottom:14px}
+.dots{display:flex;gap:5px}
+.dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--blue)}
+.dot.on{background:var(--blue)}
+.remember{border-left:4px solid var(--grey);background:var(--tint);padding:10px 14px;margin-bottom:16px;font-size:.92rem;border-radius:0 6px 6px 0}
+.scene{background:var(--blue);color:var(--white);border-radius:10px;padding:22px 26px;margin-bottom:22px}
+.scene .narr{font-style:italic;margin-bottom:.6em;opacity:.95}
+.scene .quote{margin:0;font-size:clamp(1.15rem,2.6vw,1.45rem);line-height:1.4;font-weight:700}
+.scene .quote::before{content:"“"}
+.scene .quote::after{content:"”"}
+.recap{background:var(--tint);border-radius:10px;padding:18px 22px;margin-bottom:22px}
+.recap h2{margin-bottom:.4em}
+.prompt{margin:0 0 12px}
+.opts{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.opt{display:flex;gap:14px;align-items:flex-start;width:100%;text-align:left;background:var(--white);border:2px solid var(--line);border-radius:10px;padding:12px 16px;color:var(--grey)}
+.opt:hover:not([disabled]){border-color:var(--blue);background:var(--tint)}
+.letter{flex:0 0 30px;height:30px;border-radius:50%;background:var(--blue);color:var(--white);display:grid;place-items:center;font-weight:700;font-size:.9rem}
+.opt-txt{flex:1;padding-top:3px}
+.opt-tag{display:block;font-size:.8rem;font-weight:700;margin-top:3px}
+.opt.good{border-color:var(--ok);background:var(--ok-bg)}
+.opt.good .letter{background:var(--ok)}
+.opt.good .opt-tag{color:var(--ok)}
+.opt.bad{border-color:var(--bad);background:var(--bad-bg)}
+.opt.bad .letter{background:var(--bad)}
+.opt.bad .opt-tag{color:var(--bad)}
+.opt[disabled]{cursor:default}
+.opt.faded{opacity:.62}
+.fb{margin-top:16px;border-radius:10px;padding:16px 20px;border:2px solid var(--blue);background:var(--white)}
+.fb:focus{outline:none}
+.fb h3{font-family:var(--head);font-size:1.15rem;font-weight:800;color:var(--blue);margin-bottom:.35em}
+.fb.good h3{color:var(--ok)}
+.fb.bad h3{color:var(--bad)}
+.fb p:last-of-type{margin-bottom:0}
+.fb .actions{margin-top:14px}
+.kl{background:var(--white);border:2px solid var(--blue);border-radius:10px;padding:20px 24px}
+.kl h2{margin-bottom:.4em}
+.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.page-actions{margin-top:22px}
+
+/* ---------- Quiz ---------- */
+fieldset{border:0;margin:0;padding:0;min-inline-size:0}
+legend{padding:0;margin-bottom:12px;font-weight:700;color:var(--blue)}
+.chk{display:flex;gap:12px;align-items:flex-start;border:2px solid var(--line);border-radius:10px;padding:11px 14px;cursor:pointer;background:var(--white)}
+.chk:hover{border-color:var(--blue)}
+.chk input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--blue);flex:0 0 auto}
+.chk.good{border-color:var(--ok);background:var(--ok-bg)}
+.chk.bad{border-color:var(--bad);background:var(--bad-bg)}
+.chk.miss{border-color:var(--grey);border-style:dashed}
+.chk .tag{display:block;font-size:.8rem;font-weight:700}
+.chk.good .tag{color:var(--ok)}
+.chk.bad .tag{color:var(--bad)}
+.panel{background:var(--blue);color:var(--white);border-radius:10px;padding:22px 26px}
+.panel h2{color:var(--white);margin-bottom:.5em}
+.panel p:last-child{margin-bottom:0}
+.panel .btn{background:var(--white);color:var(--blue);border-color:var(--white)}
+.panel .btn:hover{background:var(--tint)}
+.panel :focus-visible{outline-color:var(--white)}
+
+@media (max-width:560px){
+  .shell{padding:18px 14px 36px}
+  .hub-icon{flex-basis:52px;height:52px}
+  .scene{padding:18px}
+  .card-photo{flex-basis:30%}
+  .card .av{width:58px;height:58px;font-size:1.3rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <main id="app" tabindex="-1"></main>
+  <div id="live" class="sr" aria-live="polite"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* =====================================================================
+   CONFIG – change these without touching the rest of the code
+   ===================================================================== */
+var CONFIG = {
+  MIN_BRANCHES: 3,          // conversations that must be completed before the learner can continue
+  REQUIRED_IDS: [],         // optional: ids that MUST be completed, e.g. ['sofia','kwame']
+  REPORT_SCORE: false,      // true = send first-attempt accuracy to the LMS as the score
+  SHOW_LEARNER_MESSAGE_WHEN_NO_LMS: false
+};
+
+/* =====================================================================
+   CONTENT – all learner-facing text lives below this line.
+   Text is written as in the script; {scriptName} is swapped for the
+   display name (see CHARS) so a name change is a one-line edit.
+   ===================================================================== */
+var CHARS = [
+  {id:'nuno',  scriptName:'Nuno',    name:'Nuno',   age:19, role:'Player',           country:'Brazil',  tone:0, photo:'',
+   quote:'I don’t really know what’s wrong. I just haven’t been feeling myself lately.'},
+  {id:'sofia', scriptName:'Sofia',   name:'Sofia',  age:27, role:'Coach',            country:'England', tone:1, photo:'',
+   quote:'I’m exhausted all the time and am finding it hard to switch off.'},
+  {id:'c3',    scriptName:'Shanice', name:'Mariam', age:15, role:'Academy Player',   country:'Morocco', tone:0, photo:'',
+   quote:'Everything feels like a lot at the moment.'},
+  {id:'kwame', scriptName:'Kwame',   name:'Kwame',  age:32, role:'Referee',          country:'Ghana',   tone:1, photo:'',
+   quote:'Things have changed recently and I’m finding that really difficult.'},
+  {id:'yuki',  scriptName:'Yuki',    name:'Yuki',   age:41, role:'Team Manager',     country:'Japan',   tone:0, photo:'',
+   quote:'I’ve been worried about someone close to me.'},
+  {id:'ratu',  scriptName:'Ratu',    name:'Ratu',   age:30, role:'Club Welfare Officer', country:'Fiji', tone:1, photo:'',
+   quote:'I’m not sure what I need right now.'}
+];
+
+var TEXT = {
+  title: 'Listening and responding supportively',
+  hubSub: 'You have checked in with somebody and they would like to talk.',
+  hubHint: 'Click on a person to see what they might share.',
+  hubInfo: 'Every conversation is unique. People may share many different things, and support will look different for each person.',
+  remember: 'Remember: We do not yet know where any of these conversations will lead. Our role is not to work out what is wrong or decide what support someone needs.'
+};
+
+/* opts: [text, isCorrect, "what happens" text (retry mode only)] */
+var BRANCHES = {
+
+nuno: [
+ {type:'q', narr:'After training, Nuno hangs back to speak to you. He says:',
+  quote:'I don’t really know what’s wrong. I just haven’t been feeling myself lately.',
+  prompt:'What do you say?',
+  opts:[
+   ['“Do you think you might be depressed?”',0],
+   ['“That’s OK, you don’t need to have it all worked out. What have things been like?”',1],
+   ['“Has it got anything to do with you having been promoted to the first team?”',0],
+   ['“Everyone feels like that sometimes. It’ll pass.”',0]],
+  fb:'Nuno has told you that he does not know what is wrong. Asking him to name what is going on, guessing a cause or accepting that it is normal all close the conversation. In contrast, inviting him to describe the issue keeps the conversation open. Answer A hands a 19-year-old a diagnosis from someone who is unqualified to give one.'},
+ {type:'q',
+  quote:'I don’t know. I’ve just been feeling flat. Training has been fine. I just don’t really feel like doing anything after training.',
+  prompt:'What now?',
+  opts:[
+   ['Ask what has changed and when he first noticed the change.',1],
+   ['Suggest that he see the club doctor.',0],
+   ['Reassure him that it sounds like normal tiredness.',0],
+   ['Ask whether he is sleeping and eating properly.',0]],
+  fb:'The fact that Nuno described himself as feeling “flat” and has been withdrawing from activities that he used to do is worth understanding better before you take things any further. Answer B may come in time, but it is not appropriate 30 seconds into the conversation. Answer C settles the question before it has been asked: Nuno has described a change, and calling it normal tiredness invites him to leave it there. Answer D turns you into an assessor.'},
+ {type:'kl',
+  quote:'Around a few weeks ago. It’s been going on since about February.',
+  kl:['You did not find out what was wrong, and you did not need to. You established that something had changed, roughly when and that it is an ongoing issue. That is enough to keep the conversation open and enable you to check in at a later date. If the issue is still there when you check in, encourage Nuno to see a doctor or direct him towards your medical route. If he would like additional support, you can help him to think about what might be useful, and you would agree with him about what gets passed on and to whom.']}
+],
+
+sofia: [
+ {type:'q',
+  quote:'I’m exhausted all the time and am finding it hard to switch off.',
+  prompt:'What do you say?',
+  opts:[
+   ['“You should take a few days off.”',0],
+   ['“That sounds draining. How long have things been like that?”',1],
+   ['“It’s a demanding job. That’s part and parcel of the role.”',0],
+   ['“Have you tried getting to bed earlier?”',0]],
+  fb:'Answer C treats the issue as simply part of the job and closes the conversation. Answers A and D offer solutions before you know the problem, and for a coach on a short-term contract, suggesting that they take time off can sound like you think that they are not coping.'},
+ {type:'q',
+  quote:'A while. I don’t want this going any further, to be honest. My contract is up in June.',
+  prompt:'What do you say?',
+  opts:[
+   ['“Don’t worry, nobody will hear about this.”',0],
+   ['“That makes sense. This stays between us unless anything you say raises a safety concern, in which case, I’d have to get help, and I’d tell you that I was going to do so first.”',1],
+   ['“You shouldn’t have to worry about that.”',0],
+   ['“I’d have to mention it to the director of football.”',0]],
+  fb:'Sofia’s fears about her future are realistic and the reason why many people in football say nothing. Answer C dismisses the issue. Answer A features a promise that you may not be able to keep. Answer D escalates a well-being conversation into a formal one. Making the confidentiality limitations clear from the outset enables the rest of the conversation to take place.'},
+ {type:'kl',
+  quote:'OK, thanks.',
+  kl:['People weigh up what disclosure might cost them. For staff on insecure contracts, that calculation is real. You cannot remove the risk but being honest about confidentiality at an early stage enables someone to keep talking. Say what you can and cannot keep to yourself and do so in your own words. A safety concern is the most common reason you may have to pass something on, and it is not the only one: safeguarding duties and your organisation’s legal and reporting responsibilities may also require you to share information. Find out what applies to you before you need to know. The 2026 IOC consensus statement lists fear of deselection and concern about losing sporting opportunities among the main barriers to seeking help. Sofia’s calculation is not unusual or irrational.']}
+],
+
+c3: [
+ {type:'q', narr:'After a training session, Shanice quietly tells you:',
+  quote:'Everything feels like a lot at the moment.',
+  prompt:'What is the first thing to do?',
+  opts:[
+   ['Ask Shanice what has been going on.',0],
+   ['Move somewhere private and quiet to allow Shanice to speak freely.',0],
+   ['Before Shanice goes any further, let her know that, depending on what she tells you, you may not be able to keep things to yourself.',1],
+   ['Reassure Shanice that whatever she says is safe with you.',0]],
+  fb:'Shanice is 15. If she tells you something that raises a safeguarding concern, you will have to pass it on, and she deserves to know that before, and not after, she decides what to say. Answer A is the right question in the wrong order: it invites Shanice to tell you something before she knows what you may have to do with it. As for answer B, a private space is not the same as an isolated space, and you should not be alone with a child behind a closed door. In some settings, an adult of the opposite sex speaking alone with a 15-year-old is an issue in itself, however well intended. In that scenario, the solution involves another adult being present or another adult having the conversation, rather than no conversation taking place at all. Answer D is the most damaging option, because it promises her something that you may not be able to deliver.'},
+ {type:'q',
+  narr:'You say: “Before you tell me anything else, I should say that because you’re under 18, if something worries me about your safety, I won’t be able to keep it between the two of us. I’d always tell you what I was doing.”',
+  quote:'OK. It’s just school, football and everything at home. It’s a lot.',
+  prompt:'What now?',
+  opts:[
+   ['Ask specifically what is happening at home.',0],
+   ['Ask Shanice which part is weighing most heavily on her.',1],
+   ['Tell Shanice that you will speak to her parents.',0],
+   ['Reassure Shanice that lots of academy players feel this way.',0]],
+  fb:'Shanice named three things that are troubling her. Letting her choose which is weighing most heavily on her means that she remains in charge of her own situation. Answer A presses her on the area that you are most curious about, which might not be the one that she needs to talk about. Answer C removes her agency, and you do not yet know whether the problem lies at home. Answer D tells Shanice that what she has described is unremarkable, which gives her a reason to stop describing it.'},
+ {type:'kl',
+  quote:'Probably school. There’s exams, and I’m training four nights a week.',
+  kl:['When you are speaking with a child or young person, be clear about the limits of confidentiality before, and not after, they speak to you. Making the confidentiality limitations clear from the outset can feel awkward, but it protects the relationship. If Shanice had gone on to talk about something that needed to be reported, it is important that she would have known what would have happened next.']}
+],
+
+kwame: [
+ {type:'q',
+  quote:'Things have changed recently, and I’m finding that really difficult.',
+  prompt:'What do you say?',
+  opts:[
+   ['“What’s changed?”',1],
+   ['“Is it the abuse? It’s got worse this season.”',0],
+   ['“Refereeing is difficult. You have to be able to take the flak.”',0],
+   ['“Have you spoken to your regional officer?”',0]],
+  fb:'Kwame offered you a door; walk through it rather than guessing what is behind it. Answer B guesses at abuse, and a plausible guess is harder to correct than an implausible one. Answer C is the very message that discourages officials from speaking up. Answer D moves to a referral before you know what has changed.'},
+ {type:'q',
+  quote:'I’ve moved regions for work. I don’t really know anyone at my games now. I drive there, I referee, I drive home.',
+  prompt:'What is the most useful response?',
+  opts:[
+   ['Tell Kwame that he will settle in over time.',0],
+   ['Ask Kwame whether he is still in contact with people in the region where he used to referee and whether anything would help him to feel less lonely at matches.',1],
+   ['Suggest that he join a local gym.',0],
+   ['Offer to be his main point of contact in the region.',0]],
+  fb:'Kwame’s issue is isolation, which can be an issue in officiating: he works alongside colleagues he may not know, travels to the fixture and travels home, and he has no squad or staff team around him between matches. Asking what would help enables him to remain in control of the situation. Answer A asks Kwame to wait, which leaves him in the same situation. Answer C sends him to a gym, where he would also be on his own. Although answer D is generous, it makes you the whole support structure, which is not sustainable and is not the goal.'},
+ {type:'kl',
+  quote:'I still speak to two of the lads from my old region. I hadn’t thought about calling them.',
+  kl:['Match officials often do not have the standing structures that players and coaches have around them. Sometimes, the most useful thing you can do is to remind someone of a connection that they already have.']}
+],
+
+yuki: [
+ {type:'q',
+  quote:'I’ve been worried about someone close to me.',
+  prompt:'What do you say?',
+  opts:[
+   ['“Who is it?”',0],
+   ['“Is it someone at the club?”',0],
+   ['“That sounds hard. Do you want to tell me about it?”',1],
+   ['“Have they got support?”',0]],
+  fb:'Answers A and B ask Yuki to reveal the identity of/information about the person who has been concerning him before you know whether that matters. Let him decide how much to share. Answer D enquires about whether the other person is receiving support before Yuki has said anything about the support he is receiving.'},
+ {type:'q',
+  quote:'It’s my brother. He’s been unwell for a long time. I’m the one who deals with these things.',
+  prompt:'What is the most important thing to do next?',
+  opts:[
+   ['Advise Yuki on how to support his brother.',0],
+   ['Ask Yuki how he himself is doing.',1],
+   ['Suggest that his brother contact a professional.',0],
+   ['Offer to look into services that Yuki could pass on to his brother.',0]],
+  fb:'Yuki is the person in front of you. Carrying long-term concern for someone else can be exhausting, and people in that position are often not asked how they are doing themselves. Answers A, C and D all keep the focus on Yuki’s brother, who is not your responsibility and is not the person in front of you.'},
+ {type:'kl',
+  quote:'Me? I hadn’t really thought about it. Tired, I suppose.',
+  kl:['When someone discloses a concern about another person, they are also telling you something about themselves. Support the person in front of you.']}
+],
+
+ratu: [
+ {type:'q',
+  quote:'I’m not sure what I need right now.',
+  prompt:'What do you say?',
+  opts:[
+   ['“That’s alright. Do you want to just talk it through?”',1],
+   ['“You’re the welfare officer, you know better than me!”',0],
+   ['“Well, what’s brought this on?”',0],
+   ['“Shall I find someone for you to speak to?”',0]],
+  fb:'Answer B is said in good spirit, but it closes the door to a conversation completely, because it tells Ratu that he should be handling the issue himself. People in helping roles are often met with exactly that response, which can make it harder for them to speak about their struggles. Answer C asks Ratu to account for himself when he has just said that he does not know what he needs. Answer D passes him on at a time when he has chosen to speak to you.'},
+ {type:'q',
+  quote:'I’ve had three difficult cases this season. I keep thinking about one of them. I don’t want to make it about me.',
+  prompt:'What do you say?',
+  opts:[
+   ['“You need to switch off from work more.”',0],
+   ['“It’s not making it about you. Supporting people affects those doing the supporting. That’s normal, and it’s worth taking seriously.”',1],
+   ['“Have you had a debrief?”',0],
+   ['“You can’t take these things home with you.”',0]],
+  fb:'Ratu has expressed his desire not to make things about him before describing the issue. Telling him that it is normal for people who support others to be affected is the right thing to say. Answers A and D are instructions that he already knows and cannot follow. Answer C poses a fair question but one that should be asked after you have told Ratu that his reaction is legitimate, rather than instead of doing so.'},
+ {type:'kl',
+  quote:'I suppose I’ve not spoken to anyone about it.',
+  kl:['Welfare officers, safeguarding leads and medical staff absorb other people’s distress repeatedly and are among the least likely individuals to be asked how they are. Supporting a helper is part of MHFR too. The 2026 IOC consensus statement makes the same point: mental health symptoms are experienced not only by athletes but by coaches, medical and performance staff, and others in non-clinical roles.']}
+]
+};
+
+var QUIZ = {
+  title: 'What stayed the same?',
+  intro: 'Despite the fact that the exercise featured six people and as many conversations, some things were common to all of them.',
+  q: 'Which of the following guidance may apply when providing an appropriate, supportive MHFR?',
+  hint: 'Select all of the answers that apply.',
+  items: [
+   ['Listen without judgement.',1],
+   ['Promise to keep everything confidential regardless of the circumstances.',0],
+   ['Assume that the person who may benefit from support requires urgent intervention.',0],
+   ['Remain calm and present.',1],
+   ['Acknowledge what has been shared.',1],
+   ['Try to solve the problem immediately.',0],
+   ['Give the person the time and space to talk if they would like to.',1],
+   ['Tell the person exactly what you think is wrong.',0],
+   ['Encourage the person to seek support if appropriate.',1],
+   ['Recognise that additional support may sometimes be helpful.',1],
+   ['Pressure the person into talking if they do not want to.',0]
+  ],
+  passMsg: 'Correct. You selected every response that applies.',
+  failMsg: 'Not quite. Review the marked answers, then try again.'
+};
+
+var FEEDBACK = {
+  title: 'Feedback',
+  paras: [
+   'Notice how much changed depending on whom you were speaking to and how little changed about how you responded.',
+   'There is no such thing as a one-size-fits-all MHFR. Providing support is rarely about saying the perfect thing or solving someone else’s problem(s). Most often, it is about listening, staying present and helping someone to take the next appropriate step.',
+   'What someone needs may look different from one person to the next, and it may change over time. You do not need to have all the answers to make a positive difference.'
+  ]
+};
+
+var NEXT = {
+  title: 'What happens next',
+  paras: [
+   'All six conversations stopped at the same point: someone said something, and you listened. The next step in the process is to connect the person to support. We will return to two of the conversations to see how they play out.'
+  ]
+};
+
+var CONT = {
+ c1: {
+  char:'sofia', label:'Continuation 1 of 2',
+  recap:'Sofia told you that she was exhausted and finding it hard to switch off. She said that she did not want things to go any further because her contract is up in June. You told her that the conversation would stay between the two of you unless anything she said raised a safety concern. You told her that if that were the case, you would have to get help, and you said that you would tell her that you were going to do so first.',
+  screens:[
+   {quote:'I’ve been thinking about what you said. I’d go to see the doctor, but I just don’t want this turning into a whole thing.',
+    prompt:'What do you do?',
+    opts:[
+     ['Tell Sofia that you will arrange an appointment with the doctor for her and let them know what has been going on.',0,
+      'Sofia asks what you mean by “what has been going on”. She agreed to see the doctor but not about what you would tell them about her.'],
+     ['Ask Sofia what she would like the doctor to know, and offer to be with her when she calls to book the appointment.',1],
+     ['Tell Sofia to book the appointment herself, so as to keep things private.',0,
+      'Sofia says that she will book the appointment, but she fails to do so. Leaving a person who may benefit from support to arrange an appointment on their own is often the point at which connecting quietly stops. Privacy matters, and it is not the same thing as leaving someone to do this alone. Booking on somebody’s behalf does mean telling somebody something, so ask first. You should offer to help and let the person decline the offer.'],
+     ['Tell the doctor that Sofia is struggling, and let them take things from there.',0,
+      'The doctor calls Sofia into their room. Sofia now knows that something was said about her that she did not hear, which may have breached your organisation’s confidentiality or information-sharing procedures, so you should check that first. Not approaching a person directly rarely gets you to where you want to be any faster and often costs you the conversation.']
+    ]},
+   {quote:'Just say I’ve not been sleeping and am run down. Don’t tell them about the other bit.',
+    prompt:'What do you say to the doctor?',
+    opts:[
+     ['“Sofia asked me to let you know she’s not been sleeping and has been run down.”',1],
+     ['“Sofia says it’s about sleep, but I think there’s more to it.”',0,
+      'You agreed with Sofia that you would say one thing, and you said another. If she finds out – and she may – you have removed the reason she agreed to speak in the first place. If you think the doctor needs to know more than the information that Sofia is willing to share, that is a conversation that needs to be had with Sofia, not behind her back.'],
+     ['“I’m worried about Sofia. Her contractual situation means that she’s under a lot of pressure.”',0,
+      'You have passed on the one thing that Sofia asked you not to. Her contractual situation was the reason she nearly said nothing in the first place.'],
+     ['Say nothing, and let Sofia explain the situation herself.',0,
+      'Although this option causes no harm, it means that Sofia has to explain everything from the beginning to the doctor after having asked you to do this for her. Choosing to leave Sofia to explain the situation is reasonable. However, deciding to do so without telling her, particularly after you had agreed to explain things to the doctor, is not. You should be clear about your preferences from the outset.']
+    ]},
+   {narr:'You have told the doctor what Sofia asked you to.',
+    prompt:'What is the last thing for you to do?',
+    opts:[
+     ['Nothing. It is in the doctor’s hands now.',0,
+      'Nothing happens immediately. Sofia does not know what was said about her, and the next time that she has something to tell you, she will factor that into her decision about whether to share it.'],
+     ['Tell Sofia what you said and with whom you shared it.',1],
+     ['Ask the doctor to let you know how it goes.',0,
+      'Although this is a reasonable instinct, it is not your information to be asking about. Ask Sofia, not the doctor, how it went.'],
+     ['Let the director of football know that Sofia is getting support.',0,
+      'The director of football is responsible for appointing the coach, and Sofia asked for this not to go further. This is the disclosure that she was afraid of.']
+    ]},
+   {narr:'A week later, you see Sofia at training. She did not go to the appointment.',
+    prompt:'What do you say?',
+    opts:[
+     ['“How are things?”',1],
+     ['“Did you go to the appointment?”',0,
+      'Sofia says that she did not go to the appointment, for which she apologises. The question is about the appointment rather than about her, so the honest answer takes the form of a confession.'],
+     ['Nothing. Sofia has made her decision.',0,
+      'The conversation is over. Not attending an appointment often does not reflect that a decision has been made to stop seeking support, and if you say nothing, it can be interpreted as you having lost interest. Sofia may have decided against going to the appointment, and that is her decision to take. You can still ask how she is.'],
+     ['Offer to book another doctor’s appointment for Sofia.',0,
+      'Sofia agrees to you booking another appointment for her. You still do not know what stopped her from attending the first appointment that was booked. Ask before things go any further.']
+    ],
+    fb:'Asking Sofia about herself, rather than the appointment, leaves her somewhere to go other than replying “Yes” or “No”. Something got in the way to prevent her attending, and it is likely to have been something ordinary: cost, a lack of time, the surgery’s opening hours, nerves or fear of being seen going in. Ask Sofia what would make things easier.'}
+  ],
+  kl:['Sofia agreed to attend the appointment first time round, and she still did not go. There is nothing unusual about that. You asked before you shared, shared only what she agreed to, told her what you had said and followed up. None of that required you to know what was wrong with her.']
+ },
+
+ c2: {
+  char:'kwame', label:'Continuation 2 of 2',
+  recap:'Kwame told you that he had moved regions for work, that he no longer knows anyone at the games he referees and that he drives to a match, referees and drives home. He mentioned two former colleagues from the region where he used to live, whom he had not thought about calling.',
+  screens:[
+   {narr:'You would like to help Kwame to take the next step. Match officials are appointed centrally, and there is no club near to where he lives. There is no doctor, no psychologist and no referees’ association for him to go to.',
+    prompt:'What do you do first?',
+    opts:[
+     ['Give him the number of a mental health helpline.',0,
+      'Kwame thanks you, but he does not make the call. A telephone number is the easiest thing to offer and among the least likely to be used, particularly by someone who has just told you that he drives to his games, referees and drives home again. In addition, making the call may involve a financial cost for Kwame or mean that he has to use a language that he does not want to.'],
+     ['Ask Kwame what he would find useful and what already exists around him, people as well as services.',1],
+     ['Tell Kwame that he should speak to a professional.',0,
+      'Kwame agrees that he probably should speak to a professional, but he does not follow up on it. By suggesting that he speak to a professional, you have named a category rather than a route, and you do not yet know whether there are any relevant professionals available locally to him.'],
+     ['Look up a service and send Kwame to it.',0,
+      'This answer involves the right instinct, but before referring Kwame to a service, you should check whether it exists, takes people directly and is affordable. Sending someone somewhere that turns them away has a bigger negative impact than not sending them anywhere.']
+    ]},
+   {quote:'About the two lads from the region I used to live in, I’ve been meaning to call them, honest. And there’s a clinic near me, but I don’t know if they do that kind of thing.',
+    prompt:'What is the most useful response?',
+    opts:[
+     ['Encourage Kwame to call his former colleagues, and offer to find out about the services that the clinic provides.',1],
+     ['Tell Kwame that checking the services that the clinic provides would be a good idea, and leave it with him.',0,
+      'Kwame goes to the clinic and finds out that it does not offer the service he is looking for. As a result, he is less likely to try again. Finding out first costs you a phone call and saves Kwame a wasted journey.'],
+     ['Tell Kwame that his two former colleagues cannot really provide support.',0,
+      'Kwame agrees with you and forgets about the two people he had just named. For someone who is struggling with isolation, contacting two people who already know him may be the most useful option. A person someone trusts and a general health worker are routes, not lesser versions of a route.'],
+     ['Offer to be the person he calls.',0,
+      'Although this is a generous offer, it makes you the whole support structure. Helping someone to establish more than one support route is key.']
+    ]},
+   {narr:'You ring the clinic. You find out that it deals with people with general health issues, can refer people, does not require a referral to offer appointments and there is a small fee.',
+    prompt:'What do you tell Kwame?',
+    opts:[
+     ['Everything you found out, including about the fee, and let him decide.',1],
+     ['It is all sorted, and he should go along to the clinic.',0,
+      'Kwame arrives at the clinic, is asked to pay a fee he was not expecting to have to and leaves. Providing accurate information is part of connecting someone with support. If you do not know something, say so.'],
+     ['The clinic is happy to book him in for an appointment. You do not mention anything about the fee to him so as to avoid the risk of it causing him to talk himself out of going.',0,
+      'Although this option is well intentioned, it is among the surest ways to lose Kwame’s trust. Deciding what someone can handle knowing takes the decision off them.'],
+     ['Nothing yet. Find a free service before you tell him anything.',0,
+      'This may ultimately prove to be the right option. However, it prevents the pursuit of a route that is available while you look for one that may not exist. Tell Kwame what you found, and, if he would like you to, keep looking.']
+    ]},
+   {narr:'Three weeks later, Kwame has spoken to one of his old colleagues in two separate telephone calls and has arranged to travel to a fixture with another official. He has not been to the clinic.',
+    prompt:'Has this worked?',
+    opts:[
+     ['No, because Kwame has not seen a professional.',0,
+      'Kwame has gone from driving to and from games alone to having had two telephone conversations with a former colleague and found someone with whom to travel to matches. For somebody who was struggling with isolation, that is support.'],
+     ['In the way that matters most to him, yes, and the clinic is still there if he wants it.',1],
+     ['Yes, and you can stop checking in now.',0,
+      'Something useful has happened at an early stage in the process. Keeping the door open to Kwame enables him to come back to you.'],
+     ['There is no way of knowing.',0,
+      'You can see that something has changed. What you cannot know is whether it is enough, which is why you keep checking in rather than closing it off.']
+    ]}
+  ],
+  kl:['There is no doctor, no psychologist and no referees’ association for Kwame to go to, and he is in a better position than he was three weeks ago. Connecting involves helping someone to reach whatever support is genuinely available to them, and sometimes the most useful route is one that they were already aware of. If a service is available, find out what is offered, whether people can access it directly and what it costs before directing anyone towards it.',
+      'Access to support does not come down purely to resources. Officials, volunteers, part-time staff and those who operate in the amateur and grassroots games often sit outside whatever support is available, and the same applies to these individuals across all football economies.']
+ }
+};
+
+var END = {
+  title: 'Notice what was the same',
+  paras: ['Notice what was the same across both scenarios. You asked the person before you decided, passed on only what had been agreed, told the person what you had said and followed up. In neither situation did you need to know what was wrong.'],
+  done: 'You have completed this activity. You can now continue to the next part of the course.'
+};
+
+/* =====================================================================
+   SCORM ADAPTER – supports SCORM 1.2 and SCORM 2004, finds the LMS API
+   in parent / opener windows, and fails silently if there isn't one
+   (so the file also runs standalone for review).
+   ===================================================================== */
+var Scorm = (function(){
+  var api=null, ver=null, ok=false, start=Date.now(), finished=false;
+  function look(w){
+    var n=0;
+    while(w && n<12){
+      try{
+        if(w.API_1484_11) return {a:w.API_1484_11,v:'2004'};
+        if(w.API) return {a:w.API,v:'1.2'};
+      }catch(e){}
+      if(w.parent===w) break;
+      w=w.parent; n++;
+    }
+    return null;
+  }
+  function pad(n,l){n=String(n);while(n.length<l)n='0'+n;return n}
+  function sessionTime(){
+    var s=Math.round((Date.now()-start)/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+    return ver==='2004' ? 'PT'+h+'H'+m+'M'+sec+'S' : pad(h,4)+':'+pad(m,2)+':'+pad(sec,2);
+  }
+  function get(k12,k04){
+    if(!ok) return '';
+    try{ return String(ver==='2004' ? api.GetValue(k04) : api.LMSGetValue(k12)||''); }catch(e){ return ''; }
+  }
+  function set(k12,k04,v){
+    if(!ok) return;
+    try{ ver==='2004' ? api.SetValue(k04,String(v)) : api.LMSSetValue(k12,String(v)); }catch(e){}
+  }
+  function commit(){
+    if(!ok) return;
+    try{ ver==='2004' ? api.Commit('') : api.LMSCommit(''); }catch(e){}
+  }
+  return {
+    init:function(){
+      var r=look(window) || (window.opener ? look(window.opener) : null);
+      if(!r) return false;
+      api=r.a; ver=r.v;
+      try{ ok = (ver==='2004') ? String(api.Initialize(''))==='true' : String(api.LMSInitialize(''))==='true'; }catch(e){ ok=false; }
+      if(ok){
+        var st = ver==='2004' ? get('','cmi.completion_status') : get('cmi.core.lesson_status','');
+        if(st==='not attempted' || st==='unknown' || st===''){
+          set('cmi.core.lesson_status','cmi.completion_status','incomplete');
+          commit();
+        }
+      }
+      return ok;
+    },
+    connected:function(){return ok},
+    status:function(){ return ver==='2004' ? get('','cmi.completion_status') : get('cmi.core.lesson_status',''); },
+    getData:function(){ return get('cmi.suspend_data','cmi.suspend_data'); },
+    setData:function(s){ set('cmi.suspend_data','cmi.suspend_data',s); commit(); },
+    setBookmark:function(s){ if(ver==='1.2') set('cmi.core.lesson_location','',s); else set('','cmi.location',s); },
+    complete:function(scorePct){
+      if(!ok) return;
+      set('cmi.core.lesson_status','cmi.completion_status','completed');
+      if(typeof scorePct==='number'){
+        set('cmi.core.score.min','cmi.score.min',0);
+        set('cmi.core.score.max','cmi.score.max',100);
+        set('cmi.core.score.raw','cmi.score.raw',scorePct);
+        if(ver==='2004') set('','cmi.score.scaled',(scorePct/100).toFixed(2));
+      }
+      commit();
+    },
+    finish:function(completed){
+      if(!ok || finished) return; finished=true;
+      set('cmi.core.session_time','cmi.session_time',sessionTime());
+      set('cmi.core.exit','cmi.exit', completed ? (ver==='2004'?'normal':'') : 'suspend');
+      commit();
+      try{ ver==='2004' ? api.Terminate('') : api.LMSFinish(''); }catch(e){}
+    }
+  };
+})();
+
+
+/* =====================================================================
+   PORTRAITS – illustrated placeholders drawn in SVG (no external files).
+   Set CHARS[n].photo to a data: URI / relative file to use real photos.
+   ===================================================================== */
+var PORTRAITS = (function(){
+  var EYE='#2a1d16';
+  function face(o){
+    var brow=o.brow||'#2a1d16';
+    return '<ellipse cx="37" cy="68" rx="4" ry="6" fill="'+o.skinD+'"/><ellipse cx="83" cy="68" rx="4" ry="6" fill="'+o.skinD+'"/>'+
+      '<ellipse cx="60" cy="64" rx="23" ry="28" fill="'+o.skin+'"/>'+
+      '<path d="M44 55 q6 -3 11 -1" stroke="'+brow+'" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
+      '<path d="M65 54 q5 -2 11 1" stroke="'+brow+'" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
+      '<ellipse cx="50" cy="63" rx="2.4" ry="2.8" fill="'+EYE+'"/><ellipse cx="70" cy="63" rx="2.4" ry="2.8" fill="'+EYE+'"/>'+
+      '<path d="M60 64 q-3 9 0 11 q2 1 4 0" stroke="'+o.skinD+'" stroke-width="1.8" fill="none" stroke-linecap="round"/>'+
+      '<path d="M52 80 q8 6 16 0" stroke="'+(o.lip||'#8a4a3c')+'" stroke-width="2.2" fill="none" stroke-linecap="round"/>';
+  }
+  function build(o){
+    var s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 150" preserveAspectRatio="xMidYMin slice">'+
+      '<rect width="120" height="150" fill="'+o.bg+'"/>'+
+      '<circle cx="92" cy="30" r="46" fill="#ffffff" opacity=".18"/>'+
+      (o.hairBack||'')+
+      '<rect x="49" y="86" width="22" height="26" rx="8" fill="'+o.skinD+'"/>'+
+      '<path d="M6 150 C6 118 32 104 60 104 C88 104 114 118 114 150 Z" fill="'+o.top+'"/>'+
+      (o.topDetail||'')+
+      face(o)+(o.hairFront||'')+'</svg>';
+    return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
+  }
+  var cap='M36 62 C33 36 47 28 60 28 C74 28 87 36 84 62 C81 49 73 44 60 44 C47 44 39 49 36 62Z';
+  return {
+    nuno: build({bg:'#c9d6e6',skin:'#b97c55',skinD:'#a56a46',
+      top:'#1f4fa3',topDetail:'<path d="M46 106 L60 124 L74 106 Z" fill="#f3f6fb"/><circle cx="82" cy="126" r="4" fill="#f3f6fb" opacity=".85"/>',
+      hairFront:'<path d="'+cap+'" fill="#1b1411"/><circle cx="46" cy="33" r="7" fill="#1b1411"/><circle cx="58" cy="29" r="8" fill="#1b1411"/><circle cx="71" cy="31" r="8" fill="#1b1411"/><circle cx="80" cy="38" r="6" fill="#1b1411"/>'}),
+    sofia: build({bg:'#d8d2ca',skin:'#e8bd9d',skinD:'#d6a583',brow:'#8a6a3a',lip:'#a45a50',
+      hairBack:'<circle cx="60" cy="22" r="12" fill="#c49a52"/><path d="M34 66 C30 36 46 28 60 28 C74 28 90 36 86 66 L82 62 L38 62Z" fill="#c49a52"/>',
+      top:'#1e2023',topDetail:'<path d="M60 108 L60 150" stroke="#8a8f96" stroke-width="2"/><path d="M44 106 L60 118 L76 106" stroke="#2f3237" stroke-width="5" fill="none"/>',
+      hairFront:'<path d="'+cap+'" fill="#c49a52"/><path d="M37 60 C38 52 42 48 46 47 C42 52 40 58 40 66Z M83 60 C82 52 78 48 74 47 C78 52 80 58 80 66Z" fill="#b08a46"/>'}),
+    c3: build({bg:'#d7c8b4',skin:'#c58b64',skinD:'#b07853',
+      hairBack:'<path d="M32 64 C28 30 48 24 60 24 C74 24 92 30 88 64 C89 92 94 112 84 122 L36 122 C26 112 31 92 32 64Z" fill="#1d1615"/>',
+      top:'#b3282c',topDetail:'<path d="M46 106 Q60 120 74 106" stroke="#7d1a1e" stroke-width="5" fill="none"/><path d="M14 138 L34 150 M106 138 L86 150" stroke="#f3e9e9" stroke-width="3" opacity=".7"/>',
+      hairFront:'<path d="M36 64 C32 38 46 27 62 27 C76 27 88 38 84 64 C82 52 78 46 70 42 C62 52 46 50 36 64Z" fill="#1d1615"/>'}),
+    kwame: build({bg:'#c9d8e4',skin:'#6b4430',skinD:'#59382a',lip:'#3e2419',
+      top:'#f0bf2a',topDetail:'<path d="M44 106 Q60 118 76 106 L76 112 Q60 124 44 112Z" fill="#1c1c1c"/>',
+      hairFront:'<path d="M37 60 C36 40 47 35 60 35 C73 35 84 40 83 60 C80 49 72 45 60 45 C48 45 40 49 37 60Z" fill="#120d0b"/>'}),
+    yuki: build({bg:'#c5d1de',skin:'#f0d2b8',skinD:'#deb99c',lip:'#a45a50',brow:'#1c1512',
+      hairBack:'<path d="M33 64 C30 30 48 24 60 24 C74 24 90 30 87 64 C88 86 91 104 86 114 L34 114 C29 104 32 86 33 64Z" fill="#14100f"/>',
+      top:'#1c2433',topDetail:'<path d="M48 106 L60 126 L72 106 Z" fill="#f4f6f9"/><path d="M40 106 L58 140 L50 150 M80 106 L62 140 L70 150" stroke="#2c374a" stroke-width="4" fill="none"/>',
+      hairFront:'<path d="M35 64 C32 38 46 27 60 27 C74 27 88 38 85 64 C82 50 74 42 60 40 C46 42 38 50 35 64Z" fill="#14100f"/>'}),
+    ratu: build({bg:'#93bfc6',skin:'#b07a52',skinD:'#9b6742',lip:'#6e3d2c',
+      top:'#2f6b45',topDetail:'<g fill="#a5d0a8" opacity=".55"><circle cx="24" cy="128" r="4"/><circle cx="40" cy="140" r="4"/><circle cx="92" cy="130" r="4"/><circle cx="78" cy="144" r="4"/><circle cx="60" cy="140" r="3"/><circle cx="104" cy="144" r="3"/></g><path d="M46 106 L60 120 L74 106" stroke="#1f4a30" stroke-width="5" fill="none"/>',
+      hairFront:'<path d="M35 62 C32 36 46 27 60 27 C75 27 88 36 85 62 C82 49 74 43 60 43 C46 43 38 49 35 62Z" fill="#17110e"/>'})
+  };
+})();
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+var S = { done:[], first:{}, complete:false };
+var route = {stage:'hub'};
+var dec = null;          // state of the decision currently on screen
+var quiz = null;         // state of the quiz
+var app = document.getElementById('app');
+var live = document.getElementById('live');
+
+function charById(id){ for(var i=0;i<CHARS.length;i++) if(CHARS[i].id===id) return CHARS[i]; return null; }
+function t(s){
+  if(!s) return '';
+  CHARS.forEach(function(c){ if(c.scriptName!==c.name) s=s.split(c.scriptName).join(c.name); });
+  return s;
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function T(s){ return esc(t(s)); }
+function letter(i){ return String.fromCharCode(65+i); }
+
+function save(){
+  var key = route.stage==='c' ? route.k : (route.stage==='b' ? 'hub' : route.stage);
+  Scorm.setData(JSON.stringify({s:key, d:S.done, f:S.first, c:S.complete?1:0}));
+  Scorm.setBookmark(route.stage+(route.k?':'+route.k:''));
+}
+function load(){
+  var raw = Scorm.getData();
+  if(!raw) return;
+  try{
+    var o = JSON.parse(raw);
+    S.done = o.d||[]; S.first = o.f||{}; S.complete = !!o.c;
+    var s = o.s;
+    if(s==='c1'||s==='c2') route={stage:'c',k:s,i:0};
+    else if(s==='quiz'||s==='fb'||s==='next'||s==='end'||s==='hub') route={stage:s};
+  }catch(e){}
+}
+function scorePct(){
+  var k=Object.keys(S.first); if(!k.length) return 0;
+  var n=0; k.forEach(function(x){ n+=S.first[x]?1:0; });
+  return Math.round(100*n/k.length);
+}
+function say(msg){ live.textContent=''; setTimeout(function(){ live.textContent=msg; },30); }
+
+/* =====================================================================
+   RENDERING
+   ===================================================================== */
+function avatar(c){
+  var src=c.photo||PORTRAITS[c.id];
+  if(src) return '<img src="'+src+'" alt="">';
+  var ini = c.name.replace(/[^A-Za-z\u00C0-\u024F]/g,'').slice(0,1).toUpperCase();
+  return '<span class="av av-'+c.tone+'" aria-hidden="true">'+esc(ini)+'</span>';
+}
+var ICON_PIN='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#004d8c" stroke-width="2.4" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+var ICON_GO='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#004d8c" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+var ICON_TICK='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
+var ICON_HUB='<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2.5" width="8" height="6" rx="1.5"/><circle cx="12" cy="13" r="2"/><path d="M8.5 20c0-2 1.6-3.5 3.5-3.5s3.5 1.5 3.5 3.5"/><circle cx="5.5" cy="14.5" r="1.5"/><circle cx="18.5" cy="14.5" r="1.5"/></svg>';
+
+function setView(html, focusSel){
+  app.innerHTML = html;
+  window.scrollTo(0,0);
+  var f = app.querySelector(focusSel||'[data-focus]');
+  if(f){ f.setAttribute('tabindex','-1'); try{ f.focus({preventScroll:true}); }catch(e){ f.focus(); } }
+}
+
+function who(c, rightHTML){
+  return '<div class="topbar"><div class="who">'+avatar(c)+
+    '<div><div class="who-name">'+esc(c.name)+', '+c.age+'</div><div class="who-meta">'+esc(c.role)+' · '+esc(c.country)+'</div></div></div>'+
+    (rightHTML||'')+'</div>';
+}
+function stepsHTML(i,n,label){
+  var d=''; for(var k=0;k<n;k++) d+='<span class="dot'+(k<=i?' on':'')+'"></span>';
+  return '<div class="steps"><span>'+esc(label)+'</span><span class="dots" aria-hidden="true">'+d+'</span></div>';
+}
+
+/* ---- Hub ---- */
+function minMet(){
+  if(S.done.length < CONFIG.MIN_BRANCHES) return false;
+  for(var i=0;i<CONFIG.REQUIRED_IDS.length;i++) if(S.done.indexOf(CONFIG.REQUIRED_IDS[i])<0) return false;
+  return true;
+}
+function renderHub(){
+  var cards = CHARS.map(function(c){
+    var done = S.done.indexOf(c.id)>=0;
+    return '<button class="card'+(done?' done':'')+'" data-action="open" data-id="'+c.id+'" aria-label="'+esc(c.name)+', '+c.age+', '+esc(c.role)+', '+esc(c.country)+'. '+(done?'Completed. Open again.':'Open this conversation.')+'">'+
+      '<span class="card-photo">'+avatar(c)+'</span>'+
+      '<span class="card-body">'+
+        '<span class="card-name">'+esc(c.name)+', '+c.age+'</span>'+
+        '<span class="card-role">'+esc(c.role)+'</span>'+
+        '<span class="card-where">'+ICON_PIN+esc(c.country)+'</span>'+
+        '<span class="card-quote"><b aria-hidden="true">“</b>'+esc(c.quote)+'</span>'+
+      '</span>'+
+      (done?'<span class="badge-done">'+ICON_TICK+'Done</span>':'')+
+      '<span class="card-go" aria-hidden="true">'+ICON_GO+'</span>'+
+    '</button>';
+  }).join('');
+  var need = Math.max(0, CONFIG.MIN_BRANCHES - S.done.length);
+  var reqNote='';
+  if(CONFIG.REQUIRED_IDS.length){
+    var miss = CONFIG.REQUIRED_IDS.filter(function(id){return S.done.indexOf(id)<0}).map(function(id){return charById(id).name});
+    if(miss.length) reqNote=' You must also complete: '+miss.join(', ')+'.';
+  }
+  var tally = minMet()
+    ? '<div class="tally">'+S.done.length+' of '+CHARS.length+' conversations completed<small>You can continue now, or explore more of the conversations first.</small></div>'
+    : '<div class="tally">'+S.done.length+' of '+CHARS.length+' conversations completed<small>Complete at least '+CONFIG.MIN_BRANCHES+' to continue. Exploring more than one lets you compare them.'+reqNote+'</small></div>';
+  setView(
+    '<div class="hub-head"><div class="hub-icon">'+ICON_HUB+'</div><div>'+
+      '<h1 data-focus>'+esc(TEXT.title)+'</h1>'+
+      '<p class="hub-sub">'+esc(TEXT.hubSub)+'</p>'+
+      '<p class="hub-hint">'+esc(TEXT.hubHint)+'</p></div></div>'+
+    '<div class="grid">'+cards+'</div>'+
+    '<div class="info"><span class="info-i" aria-hidden="true">i</span><span>'+esc(TEXT.hubInfo)+'</span></div>'+
+    '<div class="hub-foot">'+tally+'<button class="btn" data-action="toquiz"'+(minMet()?'':' disabled')+'>Continue</button></div>'
+  );
+}
+
+/* ---- Decision block (shared by branches and continuations) ---- */
+function decisionInner(){
+  var s=dec.screen, mode=dec.mode, h='';
+  h += '<h2 class="prompt" id="prompt">'+T(s.prompt)+'</h2><ul class="opts" aria-labelledby="prompt">';
+  s.opts.forEach(function(o,i){
+    var cls='opt', tag='', disabled='';
+    var tried = dec.tried.indexOf(i)>=0;
+    if(dec.solved){
+      disabled=' disabled';
+      if(o[1]){ cls+=' good'; tag = (dec.pick===i || mode==='cq') ? 'Best response' : 'Best response'; }
+      else if(dec.pick===i){ cls+=' bad'; tag='Your choice: not the best response'; }
+      else cls+=' faded';
+    } else if(tried){
+      cls+=' bad'; disabled=' disabled'; tag='Tried: not the best response';
+    }
+    h += '<li><button class="'+cls+'" data-action="pick" data-i="'+i+'"'+disabled+' aria-pressed="'+((dec.pick===i||tried)?'true':'false')+'">'+
+      '<span class="letter" aria-hidden="true">'+letter(i)+'</span>'+
+      '<span class="opt-txt"><span class="sr">Option '+letter(i)+': </span>'+T(o[0])+(tag?'<span class="opt-tag">'+tag+'</span>':'')+'</span></button></li>';
+  });
+  h += '</ul>';
+  if(dec.msg){
+    var m=dec.msg;
+    h += '<div class="fb '+m.kind+'" id="fb" tabindex="-1" role="status"><h3>'+esc(m.title)+'</h3>'+
+      (m.body?'<p>'+T(m.body)+'</p>':'')+
+      (m.kind==='bad' && mode==='cq' ? '<div class="actions"><button class="btn" data-action="retry">Go back and choose again</button></div>' : '')+
+      '</div>';
+  }
+  if(dec.solved){
+    h += '<div class="actions page-actions"><button class="btn" data-action="next" id="cont">Continue</button></div>';
+  }
+  return h;
+}
+function refreshDecision(focusFb){
+  var box=document.getElementById('dec');
+  box.innerHTML=decisionInner();
+  var f = focusFb ? document.getElementById('fb') : null;
+  if(f){ f.focus({preventScroll:true}); f.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+}
+function sceneHTML(s){
+  if(!s.narr && !s.quote) return '';
+  return '<div class="scene on-blue">'+
+    (s.narr?'<p class="narr">'+T(s.narr)+'</p>':'')+
+    (s.quote?'<blockquote class="quote">'+T(s.quote)+'</blockquote>':'')+'</div>';
+}
+function klHTML(paras){
+  return '<div class="kl"><h2>Key learning</h2>'+paras.map(function(p){return '<p>'+T(p)+'</p>';}).join('')+'</div>';
+}
+
+/* ---- Branch screens ---- */
+function renderBranch(){
+  var c=charById(route.id), list=BRANCHES[route.id], s=list[route.i], n=list.length;
+  var top = who(c,'<button class="link" data-action="exit">Back to conversations</button>');
+  var steps = stepsHTML(route.i,n,'Screen '+(route.i+1)+' of '+n);
+  var remember = route.i===0 ? '<p class="remember">'+esc(TEXT.remember)+'</p>' : '';
+  var body;
+  if(s.type==='kl'){
+    if(S.done.indexOf(route.id)<0){ S.done.push(route.id); save(); say(c.name+' conversation completed.'); }
+    body = sceneHTML(s)+klHTML(s.kl)+
+      '<div class="actions page-actions"><button class="btn" data-action="exit">Back to conversations</button></div>';
+    setView(top+steps+body);
+    var k=app.querySelector('.kl h2'); if(k){k.setAttribute('data-focus','');k.setAttribute('tabindex','-1');k.focus({preventScroll:true});}
+    return;
+  }
+  dec = {screen:s, mode:'q', key:'b:'+route.id+':'+route.i, tried:[], solved:false, pick:null, msg:null};
+  setView(top+steps+remember+sceneHTML(s)+'<div id="dec">'+decisionInner()+'</div>');
+  // focus the scene so screen readers read the situation first
+  var sc=app.querySelector('.scene'); if(sc){sc.setAttribute('tabindex','-1'); sc.focus({preventScroll:true});}
+}
+
+/* ---- Quiz ---- */
+function renderQuiz(){
+  quiz = {sel:{}, checked:false, attempts:0, correct:false};
+  drawQuiz(true);
+}
+function drawQuiz(initial){
+  var items = QUIZ.items.map(function(it,i){
+    var on=!!quiz.sel[i], cls='chk', tag='';
+    if(quiz.checked){
+      if(it[1]&&on){cls+=' good';tag='Correct'}
+      else if(!it[1]&&on){cls+=' bad';tag='Does not apply'}
+      else if(it[1]&&!on){cls+=' miss';tag='You missed this one'}
+    }
+    return '<li><label class="'+cls+'"><input type="checkbox" data-i="'+i+'"'+(on?' checked':'')+(quiz.checked?' disabled':'')+'>'+
+      '<span>'+esc(it[0])+(tag?'<span class="tag">'+tag+'</span>':'')+'</span></label></li>';
+  }).join('');
+  var result='', actions='';
+  if(quiz.checked){
+    result='<div class="fb '+(quiz.correct?'good':'bad')+'" id="fb" tabindex="-1" role="status"><h3>'+(quiz.correct?'Correct':'Not quite')+'</h3><p>'+esc(quiz.correct?QUIZ.passMsg:QUIZ.failMsg)+'</p></div>';
+    actions = quiz.correct
+      ? '<button class="btn" data-action="tofb">Continue</button>'
+      : '<button class="btn" data-action="qretry">Try again</button>';
+  } else {
+    var any=Object.keys(quiz.sel).some(function(k){return quiz.sel[k]});
+    actions='<button class="btn" data-action="qcheck"'+(any?'':' disabled')+'>Check answers</button>';
+  }
+  var html = '<h1 data-focus>'+esc(QUIZ.title)+'</h1><p style="margin-top:.6em">'+esc(QUIZ.intro)+'</p>'+
+    '<fieldset><legend>'+esc(QUIZ.q)+' <span style="font-weight:400;color:#4d4f53">'+esc(QUIZ.hint)+'</span></legend>'+
+    '<ul class="opts" id="qlist">'+items+'</ul></fieldset>'+result+'<div class="actions page-actions">'+actions+'</div>';
+  if(initial){ setView(html); }
+  else {
+    app.innerHTML=html;
+    var f=document.getElementById('fb'); if(f){f.focus({preventScroll:true});f.scrollIntoView({block:'nearest'});}
+  }
+}
+
+/* ---- Simple text pages ---- */
+function renderText(o, nextAction, btn, asPanel){
+  var h = asPanel
+    ? '<div class="panel on-blue"><h1 data-focus style="color:#fff">'+esc(o.title)+'</h1>'+o.paras.map(function(p){return '<p>'+T(p)+'</p>'}).join('')+'</div>'
+    : '<h1 data-focus>'+esc(o.title)+'</h1><div style="margin-top:.8em">'+o.paras.map(function(p){return '<p>'+T(p)+'</p>'}).join('')+'</div>';
+  h += '<div class="actions page-actions"><button class="btn" data-action="'+nextAction+'">'+esc(btn)+'</button></div>';
+  setView(h);
+}
+
+/* ---- Continuations ---- */
+function renderCont(){
+  var C=CONT[route.k], c=charById(C.char), total=C.screens.length+2, i=route.i;
+  var top = who(c,'<span class="who-meta" style="font-weight:700;color:#004d8c">'+esc(C.label)+'</span>');
+  var steps = stepsHTML(i,total,'Screen '+(i+1)+' of '+total);
+  if(i===0){
+    setView(top+steps+'<div class="recap"><h1 data-focus style="font-size:1.5rem">Where you left it</h1><p style="margin-top:.5em">'+T(C.recap)+'</p></div>'+
+      '<div class="actions"><button class="btn" data-action="next">Begin</button></div>');
+    return;
+  }
+  if(i===total-1){
+    setView(top+steps+klHTML(C.kl).replace('<h2>','<h2 data-focus>')+
+      '<div class="actions page-actions"><button class="btn" data-action="next">Continue</button></div>');
+    return;
+  }
+  var s=C.screens[i-1];
+  dec={screen:s, mode:'cq', key:'c:'+route.k+':'+i, tried:[], solved:false, pick:null, msg:null};
+  setView(top+steps+sceneHTML(s)+'<div id="dec">'+decisionInner()+'</div>');
+  var sc=app.querySelector('.scene'); if(sc){sc.setAttribute('tabindex','-1'); sc.focus({preventScroll:true});}
+}
+
+/* ---- End ---- */
+function renderEnd(){
+  if(!S.complete){
+    S.complete=true; save();
+    Scorm.complete(CONFIG.REPORT_SCORE ? scorePct() : undefined);
+    say('Activity complete.');
+  }
+  setView('<div class="panel on-blue"><h1 data-focus style="color:#fff">'+esc(END.title)+'</h1>'+
+    END.paras.map(function(p){return '<p>'+T(p)+'</p>'}).join('')+'</div>'+
+    '<p class="page-actions" style="font-weight:700;color:#004d8c">'+esc(END.done)+'</p>'+
+    '<div class="actions"><button class="btn alt" data-action="restart">Review the conversations again</button></div>');
+}
+
+function render(){
+  switch(route.stage){
+    case 'hub': renderHub(); break;
+    case 'b': renderBranch(); break;
+    case 'quiz': renderQuiz(); break;
+    case 'fb': renderText(FEEDBACK,'tonext','Continue'); break;
+    case 'next': renderText(NEXT,'toc1','Continue',true); break;
+    case 'c': renderCont(); break;
+    case 'end': renderEnd(); break;
+    default: renderHub();
+  }
+}
+function go(r){ route=r; render(); save(); }
+
+/* =====================================================================
+   EVENTS
+   ===================================================================== */
+app.addEventListener('change', function(e){
+  var el=e.target;
+  if(el.matches && el.matches('#qlist input[type=checkbox]')){
+    quiz.sel[el.getAttribute('data-i')] = el.checked;
+    var any=Object.keys(quiz.sel).some(function(k){return quiz.sel[k]});
+    var b=app.querySelector('[data-action=qcheck]'); if(b) b.disabled=!any;
+  }
+});
+
+app.addEventListener('click', function(e){
+  var b=e.target.closest('[data-action]'); if(!b || b.disabled) return;
+  var a=b.getAttribute('data-action');
+
+  if(a==='open'){ go({stage:'b', id:b.getAttribute('data-id'), i:0}); }
+  else if(a==='exit'){ go({stage:'hub'}); }
+  else if(a==='toquiz'){ go({stage:'quiz'}); }
+  else if(a==='tofb'){ go({stage:'fb'}); }
+  else if(a==='tonext'){ go({stage:'next'}); }
+  else if(a==='toc1'){ go({stage:'c', k:'c1', i:0}); }
+  else if(a==='restart'){ go({stage:'hub'}); }
+
+  else if(a==='qcheck'){
+    quiz.attempts++; quiz.checked=true;
+    var ok=true; QUIZ.items.forEach(function(it,i){ if(!!it[1]!==!!quiz.sel[i]) ok=false; });
+    quiz.correct=ok;
+    if(!(('quiz') in S.first)) S.first['quiz']= (ok && quiz.attempts===1) ? 1 : 0;
+    drawQuiz(false); save();
+  }
+  else if(a==='qretry'){ quiz.checked=false; drawQuiz(false); var h=app.querySelector('legend'); if(h){h.setAttribute('tabindex','-1');h.focus();} }
+
+  else if(a==='pick'){
+    if(dec.solved) return;
+    var i=+b.getAttribute('data-i'), o=dec.screen.opts[i];
+    if(dec.mode==='q'){
+      dec.pick=i; dec.solved=true;
+      S.first[dec.key]= o[1]?1:0;
+      dec.msg = o[1] ? {kind:'good',title:'Correct',body:dec.screen.fb} : {kind:'bad',title:'Not the best response',body:dec.screen.fb};
+      refreshDecision(true);
+    } else {
+      if(o[1]){
+        dec.pick=i; dec.solved=true;
+        if(!(dec.key in S.first)) S.first[dec.key]=1;
+        dec.msg = {kind:'good', title:'Correct', body:dec.screen.fb||''};
+      } else {
+        dec.tried.push(i);
+        S.first[dec.key]=0;
+        dec.msg = {kind:'bad', title:'What happens', body:o[2]||''};
+      }
+      refreshDecision(true);
+    }
+    save();
+  }
+  else if(a==='retry'){
+    dec.msg=null; refreshDecision(false);
+    var first=document.querySelector('#dec .opt:not([disabled])'); if(first) first.focus();
+  }
+  else if(a==='next'){
+    if(route.stage==='c'){
+      var C=CONT[route.k], total=C.screens.length+2;
+      if(route.i < total-1) go({stage:'c', k:route.k, i:route.i+1});
+      else if(route.k==='c1') go({stage:'c', k:'c2', i:0});
+      else go({stage:'end'});
+    } else if(route.stage==='b'){
+      go({stage:'b', id:route.id, i:route.i+1});
+    }
+  }
+});
+
+/* =====================================================================
+   START
+   ===================================================================== */
+Scorm.init();
+load();
+render();
+window.addEventListener('pagehide', function(){ Scorm.finish(S.complete); });
+window.addEventListener('beforeunload', function(){ Scorm.finish(S.complete); });
+})();
+</script>
+</body>
+</html>
