@@ -35,7 +35,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* ---------- Hub ---------- */
-.hub-head{display:flex;gap:18px;align-items:flex-start;margin-bottom:22px}
+.hub-head{display:flex;gap:18px;align-items:center;margin-bottom:22px}
 .hub-icon{flex:0 0 68px;height:68px;border-radius:50%;background:var(--blue);display:grid;place-items:center}
 .hub-sub{font-weight:700;color:var(--grey);margin:.5em 0 .15em}
 .hub-hint{margin:0}
@@ -731,8 +731,8 @@ function renderHub(){
     : '<div class="tally">'+S.done.length+' of '+CHARS.length+' conversations completed<small>Complete at least '+CONFIG.MIN_BRANCHES+' to continue. Exploring more than one lets you compare them.'+reqNote+'</small></div>';
   setView(
     '<div class="hub-head"><div class="hub-icon">'+ICON_HUB+'</div><div>'+
-      '<h1 data-focus>'+esc(TEXT.title)+'</h1>'+
-      '<p class="hub-sub">'+esc(TEXT.hubSub)+'</p>'+
+      '<h1 class="sr" data-focus>'+esc(TEXT.title)+'</h1>'+
+      '<p class="hub-sub" style="margin-top:0">'+esc(TEXT.hubSub)+'</p>'+
       '<p class="hub-hint">'+esc(TEXT.hubHint)+'</p></div></div>'+
     '<div class="grid">'+cards+'</div>'+
     '<div class="info"><span class="info-i" aria-hidden="true">i</span><span>'+esc(TEXT.hubInfo)+'</span></div>'+
