@@ -56,6 +56,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .card-quote b{color:var(--blue);font-size:1.3em;line-height:0;vertical-align:-.15em;margin-right:3px}
 .card-go{position:absolute;right:10px;bottom:10px;width:26px;height:26px;border-radius:50%;border:2px solid var(--blue);display:grid;place-items:center}
 .card.done{border-color:var(--blue)}
+.badge-req{position:absolute;top:8px;right:8px;border:1px solid var(--grey);color:var(--grey);background:var(--white);font-size:.72rem;font-weight:700;padding:1px 8px;border-radius:99px}
 .badge-done{position:absolute;top:8px;right:8px;background:var(--blue);color:var(--white);font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:99px;display:flex;gap:4px;align-items:center}
 .info{display:flex;gap:12px;align-items:center;background:var(--tint);border-radius:8px;padding:12px 16px;margin-top:18px;font-size:.92rem}
 .info-i{flex:0 0 30px;height:30px;border-radius:50%;background:var(--blue);color:var(--white);display:grid;place-items:center;font-weight:700;font-family:Georgia,serif}
@@ -160,7 +161,7 @@ legend{padding:0;margin-bottom:12px;font-weight:700;color:var(--blue)}
    ===================================================================== */
 var CONFIG = {
   MIN_BRANCHES: 3,          // conversations that must be completed before the learner can continue
-  REQUIRED_IDS: [],         // optional: ids that MUST be completed, e.g. ['sofia','kwame']
+  REQUIRED_IDS: ['sofia','kwame'],   // conversations that MUST be completed (they contain the 'connecting to support' follow-ups)
   MAX_ATTEMPTS: 2,          // attempts allowed on the continuation questions and the quiz before the correct answer is shown
   REPORT_SCORE: false,      // true = send first-attempt accuracy to the LMS as the score
   SHOW_LEARNER_MESSAGE_WHEN_NO_LMS: false
@@ -375,19 +376,12 @@ var FEEDBACK = {
   ]
 };
 
-var NEXT = {
-  title: 'What happens next',
-  paras: [
-   'All six conversations stopped at the same point: someone said something, and you listened. The next step in the process is to connect the person to support. We will return to two of the conversations to see how they play out.'
-  ]
-};
-
 var CONT = {
  c1: {
   char:'sofia', label:'Continuation 1 of 2',
   recap:'Sofia told you that she was exhausted and finding it hard to switch off. She said that she did not want things to go any further because her contract is up in June. You told her that the conversation would stay between the two of you unless anything she said raised a safety concern. You told her that if that were the case, you would have to get help, and you said that you would tell her that you were going to do so first.',
   screens:[
-   {quote:'I’ve been thinking about what you said. I’d go to see the doctor, but I just don’t want this turning into a whole thing.',
+   {narr:'Two days later, Sofia says:', quote:'I’ve been thinking about what you said. I’d go to see the doctor, but I just don’t want this turning into a whole thing.',
     prompt:'What do you do?',
     opts:[
      ['Tell Sofia that you will arrange an appointment with the doctor for her and let them know what has been going on.',0,
@@ -398,7 +392,7 @@ var CONT = {
      ['Tell the doctor that Sofia is struggling, and let them take things from there.',0,
       'The doctor calls Sofia into their room. Sofia now knows that something was said about her that she did not hear, which may have breached your organisation’s confidentiality or information-sharing procedures, so you should check that first. Not approaching a person directly rarely gets you to where you want to be any faster and often costs you the conversation.']
     ]},
-   {quote:'Just say I’ve not been sleeping and am run down. Don’t tell them about the other bit.',
+   {narr:'Sofia says:', quote:'Just say I’ve not been sleeping and am run down. Don’t tell them about the other bit.',
     prompt:'What do you say to the doctor?',
     opts:[
      ['“Sofia asked me to let you know she’s not been sleeping and has been run down.”',1],
@@ -451,7 +445,7 @@ var CONT = {
      ['Look up a service and send Kwame to it.',0,
       'This answer involves the right instinct, but before referring Kwame to a service, you should check whether it exists, takes people directly and is affordable. Sending someone somewhere that turns them away has a bigger negative impact than not sending them anywhere.']
     ]},
-   {quote:'About the two lads from the region I used to live in, I’ve been meaning to call them, honest. And there’s a clinic near me, but I don’t know if they do that kind of thing.',
+   {narr:'Kwame says:', quote:'About the two lads from the region I used to live in, I’ve been meaning to call them, honest. And there’s a clinic near me, but I don’t know if they do that kind of thing.',
     prompt:'What is the most useful response?',
     opts:[
      ['Encourage Kwame to call his former colleagues, and offer to find out about the services that the clinic provides.',1],
@@ -489,6 +483,16 @@ var CONT = {
       'Access to support does not come down purely to resources. Officials, volunteers, part-time staff and those who operate in the amateur and grassroots games often sit outside whatever support is available, and the same applies to these individuals across all football economies.']
  }
 };
+
+/* Follow-ups now continue inside each character's own conversation */
+function joinFollowUp(id, c){
+  var b = BRANCHES[id];
+  b[b.length-1].more = true;                 // listening key-learning screen: continue instead of finishing
+  c.screens.forEach(function(sc){ sc.type='cq'; b.push(sc); });
+  b.push({type:'kl', kl:c.kl});
+}
+joinFollowUp('sofia', CONT.c1);
+joinFollowUp('kwame', CONT.c2);
 
 var END = {
   title: 'Notice what was the same',
@@ -648,7 +652,7 @@ function T(s){ return esc(t(s)); }
 function letter(i){ return String.fromCharCode(65+i); }
 
 function save(){
-  var key = route.stage==='c' ? route.k : (route.stage==='b' ? 'hub' : route.stage);
+  var key = route.stage==='b' ? 'hub' : route.stage;
   Scorm.setData(JSON.stringify({s:key, d:S.done, f:S.first, c:S.complete?1:0}));
   Scorm.setBookmark(route.stage+(route.k?':'+route.k:''));
 }
@@ -659,8 +663,7 @@ function load(){
     var o = JSON.parse(raw);
     S.done = o.d||[]; S.first = o.f||{}; S.complete = !!o.c;
     var s = o.s;
-    if(s==='c1'||s==='c2') route={stage:'c',k:s,i:0};
-    else if(s==='quiz'||s==='fb'||s==='next'||s==='end'||s==='hub') route={stage:s};
+    if(s==='quiz'||s==='fb'||s==='end'||s==='hub') route={stage:s};
   }catch(e){}
 }
 function scorePct(){
@@ -718,7 +721,7 @@ function renderHub(){
         '<span class="card-where">'+ICON_PIN+esc(c.country)+'</span>'+
         '<span class="card-quote"><b aria-hidden="true">“</b>'+esc(c.quote)+'</span>'+
       '</span>'+
-      (done?'<span class="badge-done">'+ICON_TICK+'Done</span>':'')+
+      (done?'<span class="badge-done">'+ICON_TICK+'Done</span>':(CONFIG.REQUIRED_IDS.indexOf(c.id)>=0?'<span class="badge-req">Required</span>':''))+
       '<span class="card-go" aria-hidden="true">'+ICON_GO+'</span>'+
     '</button>';
   }).join('');
@@ -800,14 +803,19 @@ function renderBranch(){
   var remember = route.i===0 ? '<p class="remember">'+esc(TEXT.remember)+'</p>' : '';
   var body;
   if(s.type==='kl'){
-    if(S.done.indexOf(route.id)<0){ S.done.push(route.id); save(); say(c.name+' conversation completed.'); }
-    body = sceneHTML(s)+klHTML(s.kl)+
-      '<div class="actions page-actions"><button class="btn" data-action="exit">Back to conversations</button></div>';
+    if(s.more){
+      body = sceneHTML(s)+klHTML(s.kl)+
+        '<div class="actions page-actions"><button class="btn" data-action="next">Continue the conversation</button></div>';
+    } else {
+      if(S.done.indexOf(route.id)<0){ S.done.push(route.id); save(); say(c.name+' conversation completed.'); }
+      body = sceneHTML(s)+klHTML(s.kl)+
+        '<div class="actions page-actions"><button class="btn" data-action="exit">Back to conversations</button></div>';
+    }
     setView(top+steps+body);
     var k=app.querySelector('.kl h2'); if(k){k.setAttribute('data-focus','');k.setAttribute('tabindex','-1');k.focus({preventScroll:true});}
     return;
   }
-  dec = {screen:s, mode:'q', key:'b:'+route.id+':'+route.i, tried:[], solved:false, pick:null, msg:null};
+  dec = {screen:s, mode:(s.type==='cq'?'cq':'q'), key:'b:'+route.id+':'+route.i, tried:[], solved:false, pick:null, msg:null};
   setView(top+steps+remember+sceneHTML(s)+'<div id="dec">'+decisionInner()+'</div>');
   // focus the scene so screen readers read the situation first
   var sc=app.querySelector('.scene'); if(sc){sc.setAttribute('tabindex','-1'); sc.focus({preventScroll:true});}
@@ -863,27 +871,6 @@ function renderText(o, nextAction, btn, asPanel){
   setView(h);
 }
 
-/* ---- Continuations ---- */
-function renderCont(){
-  var C=CONT[route.k], c=charById(C.char), total=C.screens.length+2, i=route.i;
-  var top = who(c,'<span class="who-meta" style="font-weight:700;color:#004d8c">'+esc(C.label)+'</span>');
-  var steps = stepsHTML(i,total,'Screen '+(i+1)+' of '+total);
-  if(i===0){
-    setView(top+steps+'<div class="recap"><h1 data-focus style="font-size:1.5rem">Where you left it</h1><p style="margin-top:.5em">'+T(C.recap)+'</p></div>'+
-      '<div class="actions"><button class="btn" data-action="next">Begin</button></div>');
-    return;
-  }
-  if(i===total-1){
-    setView(top+steps+klHTML(C.kl).replace('<h2>','<h2 data-focus>')+
-      '<div class="actions page-actions"><button class="btn" data-action="next">Continue</button></div>');
-    return;
-  }
-  var s=C.screens[i-1];
-  dec={screen:s, mode:'cq', key:'c:'+route.k+':'+i, tried:[], solved:false, pick:null, msg:null};
-  setView(top+steps+sceneHTML(s)+'<div id="dec">'+decisionInner()+'</div>');
-  var sc=app.querySelector('.scene'); if(sc){sc.setAttribute('tabindex','-1'); sc.focus({preventScroll:true});}
-}
-
 /* ---- End ---- */
 function renderEnd(){
   if(!S.complete){
@@ -902,9 +889,7 @@ function render(){
     case 'hub': renderHub(); break;
     case 'b': renderBranch(); break;
     case 'quiz': renderQuiz(); break;
-    case 'fb': renderText(FEEDBACK,'tonext','Continue'); break;
-    case 'next': renderText(NEXT,'toc1','Continue',true); break;
-    case 'c': renderCont(); break;
+    case 'fb': renderText(FEEDBACK,'toend','Continue'); break;
     case 'end': renderEnd(); break;
     default: renderHub();
   }
@@ -931,8 +916,7 @@ app.addEventListener('click', function(e){
   else if(a==='exit'){ go({stage:'hub'}); }
   else if(a==='toquiz'){ go({stage:'quiz'}); }
   else if(a==='tofb'){ go({stage:'fb'}); }
-  else if(a==='tonext'){ go({stage:'next'}); }
-  else if(a==='toc1'){ go({stage:'c', k:'c1', i:0}); }
+  else if(a==='toend'){ go({stage:'end'}); }
   else if(a==='restart'){ go({stage:'hub'}); }
 
   else if(a==='qcheck'){
@@ -978,14 +962,7 @@ app.addEventListener('click', function(e){
     var first=document.querySelector('#dec .opt:not([disabled])'); if(first) first.focus();
   }
   else if(a==='next'){
-    if(route.stage==='c'){
-      var C=CONT[route.k], total=C.screens.length+2;
-      if(route.i < total-1) go({stage:'c', k:route.k, i:route.i+1});
-      else if(route.k==='c1') go({stage:'c', k:'c2', i:0});
-      else go({stage:'end'});
-    } else if(route.stage==='b'){
-      go({stage:'b', id:route.id, i:route.i+1});
-    }
+    if(route.stage==='b'){ go({stage:'b', id:route.id, i:route.i+1}); }
   }
 });
 
