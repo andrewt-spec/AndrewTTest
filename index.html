@@ -161,6 +161,7 @@ legend{padding:0;margin-bottom:12px;font-weight:700;color:var(--blue)}
 var CONFIG = {
   MIN_BRANCHES: 3,          // conversations that must be completed before the learner can continue
   REQUIRED_IDS: [],         // optional: ids that MUST be completed, e.g. ['sofia','kwame']
+  MAX_ATTEMPTS: 2,          // attempts allowed on the continuation questions and the quiz before the correct answer is shown
   REPORT_SCORE: false,      // true = send first-attempt accuracy to the LMS as the score
   SHOW_LEARNER_MESSAGE_WHEN_NO_LMS: false
 };
@@ -188,7 +189,7 @@ var CHARS = [
 var TEXT = {
   title: 'Listening and responding supportively',
   hubSub: 'You have checked in with somebody and they would like to talk.',
-  hubHint: 'Select a person to see what they might share.',
+  hubHint: 'Click on a person to see what they might share.',
   hubInfo: 'Every conversation is unique. People may share many different things, and support will look different for each person.',
   remember: 'Remember: We do not yet know where any of these conversations will lead. Our role is not to work out what is wrong or decide what support someone needs.'
 };
@@ -361,7 +362,8 @@ var QUIZ = {
    ['Pressure the person into talking if they do not want to.',0]
   ],
   passMsg: 'Correct. You selected every response that applies.',
-  failMsg: 'Not quite. Review the marked answers, then try again.'
+  failMsg: 'Not quite. Review the marked answers, then try again. You have one attempt left.',
+  revealMsg: 'Not quite. That was your second attempt, so the correct answers are now highlighted. Have a look at them, then continue.'
 };
 
 var FEEDBACK = {
@@ -749,8 +751,9 @@ function decisionInner(){
     var tried = dec.tried.indexOf(i)>=0;
     if(dec.solved){
       disabled=' disabled';
-      if(o[1]){ cls+=' good'; tag = (dec.pick===i || mode==='cq') ? 'Best response' : 'Best response'; }
+      if(o[1]){ cls+=' good'; tag='Best response'; }
       else if(dec.pick===i){ cls+=' bad'; tag='Your choice: not the best response'; }
+      else if(tried){ cls+=' bad'; tag='Tried: not the best response'; }
       else cls+=' faded';
     } else if(tried){
       cls+=' bad'; disabled=' disabled'; tag='Tried: not the best response';
@@ -764,7 +767,8 @@ function decisionInner(){
     var m=dec.msg;
     h += '<div class="fb '+m.kind+'" id="fb" tabindex="-1" role="status"><h3>'+esc(m.title)+'</h3>'+
       (m.body?'<p>'+T(m.body)+'</p>':'')+
-      (m.kind==='bad' && mode==='cq' ? '<div class="actions"><button class="btn" data-action="retry">Go back and choose again</button></div>' : '')+
+      (m.note?'<p><strong>'+esc(m.note)+'</strong></p>':'')+
+      (m.kind==='bad' && mode==='cq' && !dec.solved ? '<div class="actions"><button class="btn" data-action="retry">Go back and choose again</button></div>' : '')+
       '</div>';
   }
   if(dec.solved){
@@ -811,24 +815,29 @@ function renderBranch(){
 
 /* ---- Quiz ---- */
 function renderQuiz(){
-  quiz = {sel:{}, checked:false, attempts:0, correct:false};
+  quiz = {sel:{}, checked:false, attempts:0, correct:false, revealed:false};
   drawQuiz(true);
 }
 function drawQuiz(initial){
   var items = QUIZ.items.map(function(it,i){
     var on=!!quiz.sel[i], cls='chk', tag='';
     if(quiz.checked){
-      if(it[1]&&on){cls+=' good';tag='Correct'}
-      else if(!it[1]&&on){cls+=' bad';tag='Does not apply'}
-      else if(it[1]&&!on){cls+=' miss';tag='You missed this one'}
+      if(quiz.revealed){
+        if(it[1]){cls+=' good';tag=on?'Correct':'Correct answer'}
+        else if(on){cls+=' bad';tag='Does not apply'}
+      } else {
+        if(it[1]&&on){cls+=' good';tag='Correct'}
+        else if(!it[1]&&on){cls+=' bad';tag='Does not apply'}
+        else if(it[1]&&!on){cls+=' miss';tag='You missed this one'}
+      }
     }
     return '<li><label class="'+cls+'"><input type="checkbox" data-i="'+i+'"'+(on?' checked':'')+(quiz.checked?' disabled':'')+'>'+
       '<span>'+esc(it[0])+(tag?'<span class="tag">'+tag+'</span>':'')+'</span></label></li>';
   }).join('');
   var result='', actions='';
   if(quiz.checked){
-    result='<div class="fb '+(quiz.correct?'good':'bad')+'" id="fb" tabindex="-1" role="status"><h3>'+(quiz.correct?'Correct':'Not quite')+'</h3><p>'+esc(quiz.correct?QUIZ.passMsg:QUIZ.failMsg)+'</p></div>';
-    actions = quiz.correct
+    result='<div class="fb '+(quiz.correct?'good':'bad')+'" id="fb" tabindex="-1" role="status"><h3>'+(quiz.correct?'Correct':'Not quite')+'</h3><p>'+esc(quiz.correct?QUIZ.passMsg:(quiz.revealed?QUIZ.revealMsg:QUIZ.failMsg))+'</p></div>';
+    actions = (quiz.correct||quiz.revealed)
       ? '<button class="btn" data-action="tofb">Continue</button>'
       : '<button class="btn" data-action="qretry">Try again</button>';
   } else {
@@ -930,6 +939,7 @@ app.addEventListener('click', function(e){
     quiz.attempts++; quiz.checked=true;
     var ok=true; QUIZ.items.forEach(function(it,i){ if(!!it[1]!==!!quiz.sel[i]) ok=false; });
     quiz.correct=ok;
+    if(!ok && quiz.attempts>=CONFIG.MAX_ATTEMPTS) quiz.revealed=true;
     if(!(('quiz') in S.first)) S.first['quiz']= (ok && quiz.attempts===1) ? 1 : 0;
     drawQuiz(false); save();
   }
@@ -951,7 +961,13 @@ app.addEventListener('click', function(e){
       } else {
         dec.tried.push(i);
         S.first[dec.key]=0;
-        dec.msg = {kind:'bad', title:'What happens', body:o[2]||''};
+        if(dec.tried.length >= CONFIG.MAX_ATTEMPTS){
+          dec.solved=true; dec.revealed=true;
+          dec.msg = {kind:'bad', title:'What happens', body:o[2]||'',
+            note:'That was your second attempt, so the best response is now highlighted. Have a look at it, then continue.'};
+        } else {
+          dec.msg = {kind:'bad', title:'What happens', body:o[2]||''};
+        }
       }
       refreshDecision(true);
     }
