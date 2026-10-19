@@ -150,6 +150,7 @@ legend{padding:0;margin-bottom:12px;font-weight:700;color:var(--blue)}
 <div class="shell">
   <main id="app" tabindex="-1"></main>
   <div id="live" class="sr" aria-live="polite"></div>
+  <p id="ver" style="margin-top:28px;font-size:.72rem;color:#4d4f53;opacity:.7"></p>
 </div>
 
 <script>
@@ -164,6 +165,8 @@ var CONFIG = {
   REQUIRED_IDS: ['sofia','kwame'],   // conversations that MUST be completed (they contain the 'connecting to support' follow-ups)
   MAX_ATTEMPTS: 2,          // attempts allowed on the continuation questions and the quiz before the correct answer is shown
   REPORT_SCORE: false,      // true = send first-attempt accuracy to the LMS as the score
+  VERSION: 'v5 · 2 attempts · follow-ups merged',   // shown in small print at the bottom of the page
+  SHOW_VERSION: true,       // set to false to hide the version label before launch
   SHOW_LEARNER_MESSAGE_WHEN_NO_LMS: false
 };
 
@@ -969,6 +972,7 @@ app.addEventListener('click', function(e){
 /* =====================================================================
    START
    ===================================================================== */
+(function(){var v=document.getElementById('ver'); if(v){ if(CONFIG.SHOW_VERSION) v.textContent=CONFIG.VERSION; else v.style.display='none'; }})();
 Scorm.init();
 load();
 render();
